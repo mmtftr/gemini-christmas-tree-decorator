@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Cart, CartItem, TreeProduct, OrnamentProduct, TopperProduct, formatPrice } from '../types';
 import { getSessionId } from './sessionStore';
-import * as cartApi from '../convex/cart';
+import * as cartApi from '../convex-dev/cart';
 
 export interface CartStore {
   cart: Cart | null;

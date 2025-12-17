@@ -273,7 +273,7 @@ export function useLocalTreeStore(): TreeStore {
  * Uncomment and implement when Convex backend is ready.
  *
  * import { useQuery, useMutation } from 'convex/react';
- * import { api } from '../convex/_generated/api';
+ * import { api } from '../convex-dev/_generated/api';
  *
  * export function useConvexTreeStore(sessionId: string): TreeStore {
  *   const ornaments = useQuery(api.ornaments.list, { sessionId }) ?? [];
