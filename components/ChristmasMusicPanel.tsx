@@ -26,12 +26,13 @@ const CHRISTMAS_SLIDERS: ChristmasSlider[] = [
 export function ChristmasMusicPanel() {
   const liveMusicRef = useRef<LiveMusicHelper | null>(null);
   const [playbackState, setPlaybackState] = useState<PlaybackState>('stopped');
-  const [sliderValues, setSliderValues] = useState<Record<string, number>>(() => {
-    const initial: Record<string, number> = {};
-    CHRISTMAS_SLIDERS.forEach((s, i) => {
-      initial[s.id] = i < 2 ? 0.7 : 0;
-    });
-    return initial;
+  const [sliderValues, setSliderValues] = useState<Record<string, number>>({
+    jingle: 0.7,
+    orchestral: 0.4,
+    cozy: 0.8,
+    choir: 0,
+    jazz: 0.65,
+    magical: 0.35,
   });
   const [error, setError] = useState<string | null>(null);
 

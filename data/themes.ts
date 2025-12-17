@@ -36,6 +36,29 @@ export interface SceneTheme {
 }
 
 export const SCENE_THEMES: Record<string, SceneTheme> = {
+  winterNatural: {
+    id: 'winterNatural',
+    name: 'Winter Natural',
+    description: 'Serene forest with gentle snow',
+    preview: '🌲',
+    treeColor: '#1a3d2a',
+    snowAmount: 0.35,
+    skyColor: '#0f1a24',
+    groundColor: '#d8e8e0',
+    fogColor: '#1a2830',
+    fogDensity: 0.012,
+    ambientIntensity: 0.65,
+    ambientColor: '#d4e8f0',
+    mainLightColor: '#f5f8ff',
+    mainLightIntensity: 1.6,
+    accentLightColor: '#88b4c4',
+    accentLightIntensity: 0.8,
+    snowfall: true,
+    snowfallIntensity: 0.4,
+    starsVisible: true,
+    ornamentColors: ['#8b4513', '#c4a06a', '#a8c4a8', '#d4b896', '#f5f5f5'],
+  },
+
   winterWonderland: {
     id: 'winterWonderland',
     name: 'Winter Wonderland',
@@ -175,6 +198,6 @@ export const SCENE_THEMES: Record<string, SceneTheme> = {
   },
 };
 
-export const DEFAULT_THEME = SCENE_THEMES.classicChristmas;
+export const DEFAULT_THEME = SCENE_THEMES.winterNatural;
 
 export type ThemeId = keyof typeof SCENE_THEMES;
