@@ -197,7 +197,7 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
   const [activePalette, setActivePalette] = useState<ColorPalette>('classic');
   const [showPreview, setShowPreview] = useState(true);
 
-  const TOPPER_TYPES: TopperType[] = ['star', 'angel', 'bow', 'snowflake'];
+  const TOPPER_TYPES: TopperType[] = ['star', 'snowflake'];
 
   return (
     <div className="absolute bottom-0 left-0 right-0 pointer-events-none p-4">
@@ -335,8 +335,6 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
                             style={{ color: selectedColor }}
                           >
                             {type === 'star' && <Star className="w-6 h-6" />}
-                            {type === 'angel' && <span className="text-2xl">👼</span>}
-                            {type === 'bow' && <span className="text-2xl">🎀</span>}
                             {type === 'snowflake' && <Snowflake className="w-6 h-6" />}
                             <span className="text-[10px] text-gray-400 capitalize">{type}</span>
                           </button>

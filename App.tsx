@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, ContactShadows } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { PineTree } from './components/PineTree';
 import { OrnamentMesh, GhostOrnament } from './components/Ornaments';
 import { EditableOrnament } from './components/EditableOrnament';
@@ -31,6 +31,7 @@ export default function App() {
   // Edit mode state
   const [selectedOrnamentId, setSelectedOrnamentId] = useState<string | null>(null);
   const [transformMode, setTransformMode] = useState<TransformMode>('translate');
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
 
   // Update tree config when theme changes
   const handleThemeChange = useCallback((theme: SceneTheme) => {
@@ -218,17 +219,6 @@ export default function App() {
           )}
         </group>
 
-        {/* Contact shadows under tree */}
-        <ContactShadows
-          position={[0, -3.19, 0]}
-          opacity={0.5}
-          scale={20}
-          blur={2}
-          far={4}
-          resolution={256}
-          color="#000000"
-        />
-
         <OrbitControls
           makeDefault
           minPolarAngle={0.3}
@@ -303,21 +293,27 @@ export default function App() {
       </div>
 
       {/* Welcome Overlay */}
-      {mode === 'view' && store.ornaments.length === 0 && !store.topper && (
+      {!welcomeDismissed && mode === 'view' && store.ornaments.length === 0 && !store.topper && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="bg-black/70 backdrop-blur-xl px-8 py-6 rounded-2xl border border-white/10 text-center max-w-md">
+          <div className="pointer-events-auto bg-black/70 backdrop-blur-xl px-8 py-6 rounded-2xl border border-white/10 text-center max-w-md">
             <h2 className="text-xl font-semibold mb-3">Welcome!</h2>
             <p className="text-sm text-gray-300 mb-4">
               Choose a <span className="text-green-400 font-medium">theme</span> from the left panel,
               then switch to <span className="text-green-400 font-medium">Decorate</span> mode below to add ornaments.
             </p>
-            <div className="flex justify-center gap-4 text-xs text-gray-500">
+            <div className="flex justify-center gap-4 text-xs text-gray-500 mb-4">
               <span>🎄 6 Themes</span>
               <span>•</span>
               <span>6 Ornament Types</span>
               <span>•</span>
               <span>4 Tree Toppers</span>
             </div>
+            <button
+              onClick={() => setWelcomeDismissed(true)}
+              className="text-xs text-gray-400 hover:text-white transition-colors underline underline-offset-2"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       )}
