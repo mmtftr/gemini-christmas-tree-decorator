@@ -10,12 +10,16 @@ import * as ai from '../ai';
 import * as ornaments from '../ornaments';
 import * as session from '../session';
 import * as topper from '../topper';
+import * as cart from '../cart';
+import * as orders from '../orders';
 
 export const api = {
   ai,
   ornaments,
   session,
   topper,
+  cart,
+  orders,
 } as const;
 
 export type Api = typeof api;
