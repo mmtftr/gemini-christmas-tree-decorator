@@ -109,14 +109,8 @@ export class LiveMusicHelper extends EventTarget {
     return this.prompts.filter((p) => !this.filteredPrompts.has(p.text) && p.weight > 0);
   }
 
-  public readonly setWeightedPrompts = throttle(async (prompts: MusicPrompt[]) => {
-    this.prompts = prompts;
-
-    if (this.activePrompts.length === 0) {
-      return;
-    }
-
-    if (!this.session) return;
+  private async sendPromptsToSession() {
+    if (!this.session || this.activePrompts.length === 0) return;
 
     const weightedPrompts = this.activePrompts.map((p) => ({
       text: p.text,
@@ -129,12 +123,21 @@ export class LiveMusicHelper extends EventTarget {
       this.dispatchEvent(new CustomEvent('error', { detail: e.message }));
       this.pause();
     }
+  }
+
+  private readonly throttledSendPrompts = throttle(async () => {
+    await this.sendPromptsToSession();
   }, 200);
+
+  public setWeightedPrompts(prompts: MusicPrompt[]) {
+    this.prompts = prompts;
+    this.throttledSendPrompts();
+  }
 
   public async play() {
     this.setPlaybackState('loading');
     this.session = await this.getSession();
-    await this.setWeightedPrompts(this.prompts);
+    await this.sendPromptsToSession();
     this.audioContext.resume();
     this.session.play();
     this.outputNode.connect(this.audioContext.destination);
