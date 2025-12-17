@@ -82,10 +82,17 @@ export default function App() {
         return;
       }
 
+      // Calculate rotation to face camera at time of placement
+      const camera = e.camera;
+      const dx = camera.position.x - activePlacement[0];
+      const dz = camera.position.z - activePlacement[2];
+      const rotationY = Math.atan2(dx, dz);
+
       await store.addOrnament({
         type: selectedOrnamentType,
         color: selectedColor,
         position: activePlacement,
+        rotation: [0, rotationY, 0] as [number, number, number],
         scale: 1,
       });
     },

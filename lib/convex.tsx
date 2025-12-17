@@ -1,35 +1,21 @@
 /**
- * Mock Convex React Hooks
+ * Convex-compatible React Hooks
  *
- * These hooks mimic Convex's React bindings.
- * When switching to real Convex, replace with:
- * export { useQuery, useMutation, useAction, ConvexProvider } from "convex/react";
+ * These hooks provide a Convex-like interface for the API layer.
+ * When migrating to real Convex, replace with:
+ *   import { useQuery, useMutation, useAction, ConvexProvider } from "convex/react";
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 // Re-export the api for convenience
-export { api } from '../convex/_generated/api';
+export { api } from './api';
 
 // ============================================
-// TYPES
-// ============================================
-
-type QueryFunction<Args, Result> = (args: Args) => Promise<Result>;
-type MutationFunction<Args, Result> = (args: Args) => Promise<Result>;
-type ActionFunction<Args, Result> = (args: Args) => Promise<Result>;
-
-type FunctionReference = {
-  (...args: any[]): Promise<any>;
-  subscribe?: (callback: () => void) => () => void;
-};
-
-// ============================================
-// MOCK CONVEX PROVIDER
+// PROVIDER
 // ============================================
 
 interface ConvexContextValue {
-  // In real Convex, this would hold the client connection
   isConnected: boolean;
 }
 
@@ -37,14 +23,11 @@ const ConvexContext = createContext<ConvexContextValue | null>(null);
 
 interface ConvexProviderProps {
   children: React.ReactNode;
-  // In real Convex: client: ConvexReactClient
 }
 
 export function ConvexProvider({ children }: ConvexProviderProps) {
-  const [isConnected] = useState(true);
-
   return (
-    <ConvexContext.Provider value={{ isConnected }}>
+    <ConvexContext.Provider value={{ isConnected: true }}>
       {children}
     </ConvexContext.Provider>
   );
@@ -59,38 +42,28 @@ export function useConvex() {
 }
 
 // ============================================
-// useQuery - For reading data with real-time updates
+// HOOKS
 // ============================================
 
+type AsyncFunction<Args, Result> = (args: Args) => Promise<Result>;
+
 /**
- * Subscribe to a query and get real-time updates.
- *
- * In real Convex:
- * const data = useQuery(api.ornaments.list, { sessionId });
- *
- * @param queryFn - The query function from the api object
- * @param args - Arguments to pass to the query
- * @returns The query result, or undefined while loading
+ * Hook for queries (read operations with subscriptions)
+ * Convex equivalent: useQuery(api.module.func, args)
  */
-export function useQuery<Args extends Record<string, any>, Result>(
-  queryFn: QueryFunction<Args, Result> & { subscribe?: (cb: () => void) => () => void },
+export function useQuery<Args, Result>(
+  queryFn: AsyncFunction<Args, Result> & { subscribe?: (cb: () => void) => () => void },
   args: Args
 ): Result | undefined {
   const [data, setData] = useState<Result | undefined>(undefined);
-  const [, forceUpdate] = useState({});
-  const argsRef = useRef(args);
-  argsRef.current = args;
 
-  // Initial fetch
   useEffect(() => {
     let mounted = true;
 
     const fetchData = async () => {
       try {
-        const result = await queryFn(argsRef.current);
-        if (mounted) {
-          setData(result);
-        }
+        const result = await queryFn(args);
+        if (mounted) setData(result);
       } catch (error) {
         console.error('Query error:', error);
       }
@@ -98,10 +71,7 @@ export function useQuery<Args extends Record<string, any>, Result>(
 
     fetchData();
 
-    // Subscribe to updates if available
-    const unsubscribe = queryFn.subscribe?.(() => {
-      fetchData();
-    });
+    const unsubscribe = queryFn.subscribe?.(() => fetchData());
 
     return () => {
       mounted = false;
@@ -112,24 +82,14 @@ export function useQuery<Args extends Record<string, any>, Result>(
   return data;
 }
 
-// ============================================
-// useMutation - For modifying data
-// ============================================
-
 /**
- * Get a function to call a mutation.
- *
- * In real Convex:
- * const addOrnament = useMutation(api.ornaments.add);
- * await addOrnament({ type: 'sphere', color: '#ff0000', ... });
- *
- * @param mutationFn - The mutation function from the api object
- * @returns A function that calls the mutation
+ * Hook for mutations (write operations)
+ * Convex equivalent: useMutation(api.module.func)
  */
 export function useMutation<Args, Result>(
-  mutationFn: MutationFunction<Args, Result>
+  mutationFn: AsyncFunction<Args, Result>
 ): (args: Args) => Promise<Result> {
-  const mutate = useCallback(
+  return useCallback(
     async (args: Args): Promise<Result> => {
       try {
         return await mutationFn(args);
@@ -140,53 +100,33 @@ export function useMutation<Args, Result>(
     },
     [mutationFn]
   );
-
-  return mutate;
 }
 
-// ============================================
-// useAction - For calling backend actions (like AI)
-// ============================================
-
 /**
- * Get a function to call an action.
- * Actions are for operations that need backend resources (like API keys).
- *
- * In real Convex:
- * const generateTheme = useAction(api.ai.generateTheme);
- * const theme = await generateTheme({ prompt: "winter wonderland" });
- *
- * @param actionFn - The action function from the api object
- * @returns A function that calls the action
+ * Hook for actions (backend operations like AI calls)
+ * Convex equivalent: useAction(api.module.func)
  */
 export function useAction<Args, Result>(
-  actionFn: ActionFunction<Args, Result>
+  actionFn: AsyncFunction<Args, Result>
 ): (args: Args) => Promise<Result> {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const runAction = useCallback(
+  return useCallback(
     async (args: Args): Promise<Result> => {
-      setIsLoading(true);
       try {
         return await actionFn(args);
       } catch (error) {
         console.error('Action error:', error);
         throw error;
-      } finally {
-        setIsLoading(false);
       }
     },
     [actionFn]
   );
-
-  return runAction;
 }
 
 /**
- * Same as useAction but returns loading state too
+ * useAction with loading/error state
  */
 export function useActionWithStatus<Args, Result>(
-  actionFn: ActionFunction<Args, Result>
+  actionFn: AsyncFunction<Args, Result>
 ): {
   runAction: (args: Args) => Promise<Result>;
   isLoading: boolean;
@@ -214,10 +154,3 @@ export function useActionWithStatus<Args, Result>(
 
   return { runAction, isLoading, error };
 }
-
-// ============================================
-// Utility Types for API
-// ============================================
-
-export type FunctionArgs<T extends FunctionReference> = T extends (args: infer A) => any ? A : never;
-export type FunctionReturnType<T extends FunctionReference> = T extends (...args: any[]) => Promise<infer R> ? R : never;

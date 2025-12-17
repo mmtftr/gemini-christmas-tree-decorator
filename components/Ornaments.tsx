@@ -174,14 +174,6 @@ export const OrnamentMesh: React.FC<OrnamentProps> = ({ data, onClick, isSelecte
   const groupRef = useRef<THREE.Group>(null);
   useCursor(hovered);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      const time = state.clock.getElapsedTime();
-      const offset = data.id.charCodeAt(0) * 0.1;
-      groupRef.current.rotation.z = Math.sin(time * 2 + offset) * 0.03;
-    }
-  });
-
   return (
     <group
       ref={groupRef}
@@ -223,8 +215,12 @@ export const GhostOrnament: React.FC<GhostOrnamentProps> = ({ type, color, posit
 
   useFrame((state) => {
     if (groupRef.current) {
+      // Billboard: face the camera during placement
+      const cameraPos = state.camera.position;
+      groupRef.current.lookAt(cameraPos.x, groupRef.current.position.y, cameraPos.z);
+
+      // Pulsing scale effect
       const time = state.clock.getElapsedTime();
-      groupRef.current.rotation.y = time * 1.5;
       groupRef.current.scale.setScalar(0.95 + Math.sin(time * 3) * 0.05);
     }
   });

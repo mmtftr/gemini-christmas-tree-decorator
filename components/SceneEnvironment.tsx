@@ -1,8 +1,7 @@
 import React from 'react';
-import { Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { SceneTheme } from '../data/themes';
-import { Snow, AmbientParticles } from './Snow';
+import { Snow, AmbientParticles, StarField } from './Snow';
 
 interface SceneEnvironmentProps {
   theme: SceneTheme;
@@ -12,10 +11,17 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
   return (
     <>
       {/* Fog - key forces remount on theme change */}
-      <fog key={`fog-${theme.id}`} attach="fog" args={[theme.fogColor, 10, 50]} />
+      <fog key={`fog-${theme.id}`} attach="fog" args={[theme.fogColor, 15, 60]} />
 
-      {/* Ambient Light */}
+      {/* Ambient Light - increased for better visibility */}
       <ambientLight intensity={theme.ambientIntensity} color={theme.ambientColor} />
+
+      {/* Hemisphere light for natural sky/ground lighting */}
+      <hemisphereLight
+        color={theme.mainLightColor}
+        groundColor={theme.groundColor}
+        intensity={0.4}
+      />
 
       {/* Main directional light (sun/moon) */}
       <directionalLight
@@ -32,19 +38,34 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         shadow-bias={-0.0001}
       />
 
+      {/* Front fill light for better tree visibility */}
+      <directionalLight
+        position={[0, 5, 15]}
+        intensity={theme.mainLightIntensity * 0.4}
+        color={theme.mainLightColor}
+      />
+
       {/* Accent light for color atmosphere */}
       <pointLight
         position={[-8, 6, -8]}
         intensity={theme.accentLightIntensity}
         color={theme.accentLightColor}
-        distance={25}
+        distance={30}
       />
 
       {/* Secondary accent from opposite side */}
       <pointLight
         position={[8, 4, 8]}
-        intensity={theme.accentLightIntensity * 0.5}
+        intensity={theme.accentLightIntensity * 0.6}
         color={theme.accentLightColor}
+        distance={25}
+      />
+
+      {/* Front accent for ornament shine */}
+      <pointLight
+        position={[0, 3, 10]}
+        intensity={theme.accentLightIntensity * 0.5}
+        color="#ffffff"
         distance={20}
       />
 
@@ -53,21 +74,18 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         position={[0, 15, -10]}
         angle={0.4}
         penumbra={1}
-        intensity={0.3}
+        intensity={0.5}
         color="#ffffff"
       />
 
-      {/* Stars - key forces remount on theme change */}
+      {/* Beautiful twinkling stars */}
       {theme.starsVisible && (
-        <Stars
+        <StarField
           key={`stars-${theme.id}`}
-          radius={80}
-          depth={50}
-          count={3000}
-          factor={4}
-          saturation={0.2}
-          fade
-          speed={0.5}
+          count={2500}
+          radius={90}
+          twinkleSpeed={0.8}
+          color="#ffffff"
         />
       )}
 
