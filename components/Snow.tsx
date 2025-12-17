@@ -1,115 +1,49 @@
-import React, { useRef, useMemo, useCallback } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // ============================================
-// BEAUTIFUL STARFIELD
+// SIMPLE STARFIELD (visible from all angles)
 // ============================================
 
 interface StarFieldProps {
   count?: number;
   radius?: number;
-  twinkleSpeed?: number;
-  color?: string;
 }
 
 export const StarField: React.FC<StarFieldProps> = ({
   count = 2000,
-  radius = 80,
-  twinkleSpeed = 1,
-  color = '#ffffff',
+  radius = 100,
 }) => {
   const meshRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Generate star positions with varied sizes and brightness
-  const { positions, sizes, brightness } = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const brightness = new Float32Array(count);
+  // Generate star positions on a full sphere above horizon
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      // Distribute stars on a sphere
+      // Full sphere distribution
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = radius * (0.8 + Math.random() * 0.4);
+      const r = radius * (0.8 + Math.random() * 0.2);
 
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.6 + radius * 0.3; // Bias upward
-      positions[i * 3 + 2] = r * Math.cos(phi);
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = Math.abs(r * Math.cos(phi)) + 5; // Keep above horizon
+      const z = r * Math.sin(phi) * Math.sin(theta);
 
-      // Varied star sizes - some big bright ones, mostly small
-      const sizeRoll = Math.random();
-      if (sizeRoll > 0.98) {
-        sizes[i] = 3 + Math.random() * 2; // Bright stars
-      } else if (sizeRoll > 0.9) {
-        sizes[i] = 1.5 + Math.random() * 1.5; // Medium stars
-      } else {
-        sizes[i] = 0.5 + Math.random() * 1; // Dim stars
-      }
-
-      // Random initial brightness phase
-      brightness[i] = Math.random() * Math.PI * 2;
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
     }
 
-    return { positions, sizes, brightness };
+    return pos;
   }, [count, radius]);
 
-  // Custom shader material for twinkling
-  const shaderMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Color(color) },
-      },
-      vertexShader: `
-        attribute float size;
-        attribute float brightness;
-        varying float vBrightness;
-        uniform float time;
-
-        void main() {
-          vBrightness = brightness;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-
-          // Twinkle effect based on time and brightness phase
-          float twinkle = 0.7 + 0.3 * sin(time * 2.0 + brightness);
-
-          gl_PointSize = size * twinkle * (300.0 / -mvPosition.z);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 color;
-        varying float vBrightness;
-
-        void main() {
-          // Circular star shape with soft glow
-          vec2 center = gl_PointCoord - vec2(0.5);
-          float dist = length(center);
-
-          if (dist > 0.5) discard;
-
-          // Soft glow falloff
-          float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
-          alpha = pow(alpha, 1.5);
-
-          // Slight color variation based on brightness
-          vec3 starColor = mix(color, vec3(1.0), 0.3);
-
-          gl_FragColor = vec4(starColor, alpha);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-  }, [color]);
-
-  // Animate twinkling
+  // Gentle twinkle animation
   useFrame((state) => {
-    if (shaderMaterial) {
-      shaderMaterial.uniforms.time.value = state.clock.elapsedTime * twinkleSpeed;
+    if (meshRef.current) {
+      const material = meshRef.current.material as THREE.PointsMaterial;
+      material.opacity = 0.75 + Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
     }
   });
 
@@ -122,21 +56,83 @@ export const StarField: React.FC<StarFieldProps> = ({
           array={positions}
           itemSize={3}
         />
-        <bufferAttribute
-          attach="attributes-size"
-          count={count}
-          array={sizes}
-          itemSize={1}
-        />
-        <bufferAttribute
-          attach="attributes-brightness"
-          count={count}
-          array={brightness}
-          itemSize={1}
-        />
       </bufferGeometry>
-      <primitive object={shaderMaterial} attach="material" />
+      <pointsMaterial
+        size={2}
+        color="#ffffff"
+        transparent
+        opacity={0.9}
+        sizeAttenuation
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
     </points>
+  );
+};
+
+// ============================================
+// MOON (billboard - always faces camera)
+// ============================================
+
+interface MoonProps {
+  position?: [number, number, number];
+  size?: number;
+}
+
+export const Moon: React.FC<MoonProps> = ({
+  position = [40, 35, -60],
+  size = 8,
+}) => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Make moon always face the camera
+  useFrame(({ camera }) => {
+    if (groupRef.current) {
+      groupRef.current.quaternion.copy(camera.quaternion);
+    }
+  });
+
+  return (
+    <group position={position}>
+      <group ref={groupRef}>
+        {/* Main moon disc */}
+        <mesh>
+          <circleGeometry args={[size, 64]} />
+          <meshBasicMaterial
+            color="#fffde8"
+            transparent
+            opacity={0.95}
+          />
+        </mesh>
+
+        {/* Moon glow */}
+        <mesh position={[0, 0, -0.1]}>
+          <circleGeometry args={[size * 1.4, 64]} />
+          <meshBasicMaterial
+            color="#fffde8"
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+
+        {/* Outer glow */}
+        <mesh position={[0, 0, -0.2]}>
+          <circleGeometry args={[size * 2, 64]} />
+          <meshBasicMaterial
+            color="#ffeedd"
+            transparent
+            opacity={0.1}
+          />
+        </mesh>
+      </group>
+
+      {/* Moon light source */}
+      <pointLight
+        color="#fff8e0"
+        intensity={0.6}
+        distance={200}
+      />
+    </group>
   );
 };
 

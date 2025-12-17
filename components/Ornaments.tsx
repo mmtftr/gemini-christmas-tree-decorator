@@ -9,45 +9,61 @@ import { OrnamentData, OrnamentType } from '../types';
 // ============================================
 
 const SphereOrnament: React.FC<{ color: string; opacity?: number }> = ({ color, opacity = 1 }) => (
-  <mesh castShadow receiveShadow>
-    <sphereGeometry args={[0.15, 32, 32]} />
-    <meshStandardMaterial
-      color={color}
-      metalness={0.8}
-      roughness={0.2}
-      envMapIntensity={1.5}
-      transparent={opacity < 1}
-      opacity={opacity}
-    />
-  </mesh>
+  <>
+    <mesh castShadow receiveShadow>
+      <sphereGeometry args={[0.15, 32, 32]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.3}
+        metalness={0.8}
+        roughness={0.2}
+        envMapIntensity={1.5}
+        transparent={opacity < 1}
+        opacity={opacity}
+      />
+    </mesh>
+    {/* Glow effect */}
+    <pointLight color={color} intensity={0.4} distance={0.8} />
+  </>
 );
 
 const CubeOrnament: React.FC<{ color: string; opacity?: number }> = ({ color, opacity = 1 }) => (
-  <mesh castShadow receiveShadow rotation={[0.5, 0.5, 0]}>
-    <boxGeometry args={[0.18, 0.18, 0.18]} />
-    <meshStandardMaterial
-      color={color}
-      metalness={0.8}
-      roughness={0.2}
-      envMapIntensity={1.5}
-      transparent={opacity < 1}
-      opacity={opacity}
-    />
-  </mesh>
+  <>
+    <mesh castShadow receiveShadow rotation={[0.5, 0.5, 0]}>
+      <boxGeometry args={[0.18, 0.18, 0.18]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.3}
+        metalness={0.8}
+        roughness={0.2}
+        envMapIntensity={1.5}
+        transparent={opacity < 1}
+        opacity={opacity}
+      />
+    </mesh>
+    <pointLight color={color} intensity={0.4} distance={0.8} />
+  </>
 );
 
 const DiamondOrnament: React.FC<{ color: string; opacity?: number }> = ({ color, opacity = 1 }) => (
-  <mesh castShadow receiveShadow>
-    <octahedronGeometry args={[0.15, 0]} />
-    <meshStandardMaterial
-      color={color}
-      metalness={0.9}
-      roughness={0.1}
-      envMapIntensity={2}
-      transparent={opacity < 1}
-      opacity={opacity}
-    />
-  </mesh>
+  <>
+    <mesh castShadow receiveShadow>
+      <octahedronGeometry args={[0.15, 0]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.4}
+        metalness={0.9}
+        roughness={0.1}
+        envMapIntensity={2}
+        transparent={opacity < 1}
+        opacity={opacity}
+      />
+    </mesh>
+    <pointLight color={color} intensity={0.5} distance={1} />
+  </>
 );
 
 const GiftBoxOrnament: React.FC<{ color: string; opacity?: number }> = ({ color, opacity = 1 }) => {
@@ -62,20 +78,49 @@ const GiftBoxOrnament: React.FC<{ color: string; opacity?: number }> = ({ color,
     <group>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[0.18, 0.18, 0.18]} />
-        <meshStandardMaterial color={color} roughness={0.4} transparent={opacity < 1} opacity={opacity} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.2}
+          roughness={0.4}
+          transparent={opacity < 1}
+          opacity={opacity}
+        />
       </mesh>
       <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.2, 0.04, 0.04]} />
-        <meshStandardMaterial color={ribbonColor} roughness={0.3} transparent={opacity < 1} opacity={opacity} />
+        <meshStandardMaterial
+          color={ribbonColor}
+          emissive={ribbonColor}
+          emissiveIntensity={0.3}
+          roughness={0.3}
+          transparent={opacity < 1}
+          opacity={opacity}
+        />
       </mesh>
       <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.04, 0.2, 0.04]} />
-        <meshStandardMaterial color={ribbonColor} roughness={0.3} transparent={opacity < 1} opacity={opacity} />
+        <meshStandardMaterial
+          color={ribbonColor}
+          emissive={ribbonColor}
+          emissiveIntensity={0.3}
+          roughness={0.3}
+          transparent={opacity < 1}
+          opacity={opacity}
+        />
       </mesh>
       <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.04, 0.04, 0.2]} />
-        <meshStandardMaterial color={ribbonColor} roughness={0.3} transparent={opacity < 1} opacity={opacity} />
+        <meshStandardMaterial
+          color={ribbonColor}
+          emissive={ribbonColor}
+          emissiveIntensity={0.3}
+          roughness={0.3}
+          transparent={opacity < 1}
+          opacity={opacity}
+        />
       </mesh>
+      <pointLight color={color} intensity={0.3} distance={0.7} />
     </group>
   );
 };
@@ -91,25 +136,26 @@ const SnowflakeOrnament: React.FC<{ color: string; opacity?: number }> = ({ colo
             <meshStandardMaterial
               color={color}
               emissive={color}
-              emissiveIntensity={0.4}
+              emissiveIntensity={0.5}
               transparent={opacity < 1}
               opacity={opacity}
             />
           </mesh>
           <mesh position={[0.025, 0.055, 0]} rotation={[0, 0, 0.5]} castShadow>
             <boxGeometry args={[0.008, 0.05, 0.008]} />
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} transparent={opacity < 1} opacity={opacity} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} transparent={opacity < 1} opacity={opacity} />
           </mesh>
           <mesh position={[-0.025, 0.055, 0]} rotation={[0, 0, -0.5]} castShadow>
             <boxGeometry args={[0.008, 0.05, 0.008]} />
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} transparent={opacity < 1} opacity={opacity} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} transparent={opacity < 1} opacity={opacity} />
           </mesh>
         </group>
       ))}
       <mesh castShadow>
         <octahedronGeometry args={[0.03, 0]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} transparent={opacity < 1} opacity={opacity} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.6} transparent={opacity < 1} opacity={opacity} />
       </mesh>
+      <pointLight color={color} intensity={0.5} distance={1} />
     </group>
   );
 };
@@ -129,10 +175,21 @@ const HeartOrnament: React.FC<{ color: string; opacity?: number }> = ({ color, o
   }, []);
 
   return (
-    <mesh castShadow receiveShadow rotation={[0, 0, Math.PI]}>
-      <extrudeGeometry args={[shape, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 3 }]} />
-      <meshStandardMaterial color={color} metalness={0.6} roughness={0.3} transparent={opacity < 1} opacity={opacity} />
-    </mesh>
+    <>
+      <mesh castShadow receiveShadow rotation={[0, 0, Math.PI]}>
+        <extrudeGeometry args={[shape, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 3 }]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.35}
+          metalness={0.6}
+          roughness={0.3}
+          transparent={opacity < 1}
+          opacity={opacity}
+        />
+      </mesh>
+      <pointLight color={color} intensity={0.4} distance={0.8} />
+    </>
   );
 };
 

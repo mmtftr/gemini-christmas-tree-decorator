@@ -1,7 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { SceneTheme } from '../data/themes';
-import { Snow, AmbientParticles, StarField } from './Snow';
+import { Snow, AmbientParticles, StarField, Moon } from './Snow';
 
 interface SceneEnvironmentProps {
   theme: SceneTheme;
@@ -78,15 +78,20 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         color="#ffffff"
       />
 
-      {/* Beautiful twinkling stars */}
+      {/* Stars and Moon */}
       {theme.starsVisible && (
-        <StarField
-          key={`stars-${theme.id}`}
-          count={2500}
-          radius={90}
-          twinkleSpeed={0.8}
-          color="#ffffff"
-        />
+        <>
+          <StarField
+            key={`stars-${theme.id}`}
+            count={2000}
+            radius={120}
+          />
+          <Moon
+            key={`moon-${theme.id}`}
+            position={[45, 40, -70]}
+            size={6}
+          />
+        </>
       )}
 
       {/* Snowfall - key forces remount on theme change */}
