@@ -10,12 +10,11 @@ interface CheckoutFormProps {
   onSubmit: (address: ShippingAddress) => Promise<void>;
 }
 
-const US_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+// Swiss Cantons
+const SWISS_CANTONS = [
+  'AG', 'AI', 'AR', 'BE', 'BL', 'BS', 'FR', 'GE', 'GL', 'GR',
+  'JU', 'LU', 'NE', 'NW', 'OW', 'SG', 'SH', 'SO', 'SZ', 'TG',
+  'TI', 'UR', 'VD', 'VS', 'ZG', 'ZH',
 ];
 
 export const CheckoutForm: React.FC<CheckoutFormProps> = ({
@@ -27,15 +26,15 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<ShippingAddress>({
-    fullName: '',
-    email: '',
-    phone: '',
-    addressLine1: '',
+    fullName: 'Max Muster',
+    email: 'max.muster@example.ch',
+    phone: '+41 79 123 45 67',
+    addressLine1: 'Bahnhofstrasse 1',
     addressLine2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'US',
+    city: 'Zürich',
+    state: 'ZH',
+    postalCode: '8001',
+    country: 'CH',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -66,7 +65,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
     formData.postalCode.trim();
 
   // Calculate shipping based on cart subtotal
-  const shippingCost = cart.subtotal >= 50000 ? 0 : 1999; // Free shipping over $500
+  const shippingCost = cart.subtotal >= 50000 ? 0 : 1999; // Free shipping over CHF 500
   const taxRate = 0.08; // 8% tax
   const tax = Math.round(cart.subtotal * taxRate);
   const total = cart.subtotal + shippingCost + tax;
@@ -123,7 +122,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
-                    placeholder="John Doe"
+                    placeholder="Max Muster"
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                   />
@@ -136,7 +135,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="john@example.com"
+                    placeholder="max@example.ch"
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                   />
@@ -149,7 +148,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     name="phone"
                     value={formData.phone || ''}
                     onChange={handleChange}
-                    placeholder="(555) 123-4567"
+                    placeholder="+41 79 123 45 67"
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                   />
                 </div>
@@ -171,7 +170,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     name="addressLine1"
                     value={formData.addressLine1}
                     onChange={handleChange}
-                    placeholder="123 Main St"
+                    placeholder="Bahnhofstrasse 1"
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                   />
@@ -184,7 +183,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     name="addressLine2"
                     value={formData.addressLine2 || ''}
                     onChange={handleChange}
-                    placeholder="Apt 4B"
+                    placeholder="Wohnung 4B"
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                   />
                 </div>
@@ -197,14 +196,14 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
-                      placeholder="New York"
+                      placeholder="Zürich"
                       required
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">State *</label>
+                    <label className="block text-xs text-gray-400 mb-1">Canton *</label>
                     <select
                       name="state"
                       value={formData.state}
@@ -213,9 +212,9 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500/50"
                     >
                       <option value="">Select...</option>
-                      {US_STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
+                      {SWISS_CANTONS.map((canton) => (
+                        <option key={canton} value={canton}>
+                          {canton}
                         </option>
                       ))}
                     </select>
@@ -224,15 +223,15 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">ZIP Code *</label>
+                    <label className="block text-xs text-gray-400 mb-1">Postal Code *</label>
                     <input
                       type="text"
                       name="postalCode"
                       value={formData.postalCode}
                       onChange={handleChange}
-                      placeholder="10001"
+                      placeholder="8001"
                       required
-                      pattern="[0-9]{5}(-[0-9]{4})?"
+                      pattern="[0-9]{4}"
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
                     />
                   </div>
@@ -262,7 +261,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 />
                 {shippingCost === 0 && (
                   <p className="text-xs text-green-400 mt-2 text-center">
-                    Free shipping on orders over $500
+                    Free shipping on orders over CHF 500
                   </p>
                 )}
               </div>

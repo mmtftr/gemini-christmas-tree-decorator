@@ -117,7 +117,7 @@ export default function App() {
       const dz = camera.position.z - activePlacement[2];
       const rotationY = Math.atan2(dx, dz);
 
-      // Add ornament to tree visualization
+      // Add ornament to tree visualization only (not cart)
       await store.addOrnament({
         type: selectedOrnamentType,
         color: selectedColor,
@@ -125,14 +125,8 @@ export default function App() {
         rotation: [0, rotationY, 0] as [number, number, number],
         scale: 1,
       });
-
-      // Add ornament to cart
-      const ornamentProduct = getOrnamentProductByType(selectedOrnamentType);
-      if (ornamentProduct) {
-        await cartStore.addOrnamentToCart(ornamentProduct, selectedColor, activePlacement);
-      }
     },
-    [mode, activePlacement, selectedOrnamentType, selectedColor, store, cartStore]
+    [mode, activePlacement, selectedOrnamentType, selectedColor, store]
   );
 
   const handleTreeOut = useCallback(() => {
@@ -150,7 +144,7 @@ export default function App() {
   const handleTopperClick = useCallback(async () => {
     if (mode !== 'topper') return;
 
-    // Add topper to tree visualization
+    // Add topper to tree visualization only (not cart)
     await store.setTopper({
       type: selectedTopperType,
       color: selectedColor,
@@ -158,24 +152,38 @@ export default function App() {
       glow: true,
     });
 
-    // Add topper to cart
-    const topperProduct = getTopperProductByType(selectedTopperType);
-    if (topperProduct) {
-      await cartStore.addTopperToCart(topperProduct, selectedColor);
+    setMode('view');
+  }, [mode, selectedTopperType, selectedColor, store]);
+
+  // Tree product selection handler - just updates the selection, doesn't add to cart
+  const handleSelectTreeProduct = useCallback(
+    (product: TreeProduct) => {
+      setSelectedTreeProduct(product);
+    },
+    []
+  );
+
+  // Add entire decorated tree to cart (tree + ornaments + topper as a bundle)
+  const handleAddToCart = useCallback(async () => {
+    // Add tree to cart
+    await cartStore.addTreeToCart(selectedTreeProduct);
+
+    // Add all placed ornaments to cart
+    for (const ornament of store.ornaments) {
+      const ornamentProduct = getOrnamentProductByType(ornament.type);
+      if (ornamentProduct) {
+        await cartStore.addOrnamentToCart(ornamentProduct, ornament.color, ornament.position);
+      }
     }
 
-    setMode('view');
-  }, [mode, selectedTopperType, selectedColor, store, cartStore]);
-
-  // Tree product selection handler
-  const handleSelectTreeProduct = useCallback(
-    async (product: TreeProduct) => {
-      setSelectedTreeProduct(product);
-      // Add tree to cart
-      await cartStore.addTreeToCart(product);
-    },
-    [cartStore]
-  );
+    // Add topper to cart if present
+    if (store.topper) {
+      const topperProduct = getTopperProductByType(store.topper.type);
+      if (topperProduct) {
+        await cartStore.addTopperToCart(topperProduct, store.topper.color);
+      }
+    }
+  }, [selectedTreeProduct, store.ornaments, store.topper, cartStore]);
 
   // Checkout handler
   const handleCheckout = useCallback(async (address: ShippingAddress) => {
@@ -346,6 +354,23 @@ export default function App() {
 
           {/* Right Panel - Cart & Music */}
           <div className="pointer-events-auto flex flex-col items-end gap-3">
+            {/* Add to Cart Button - shows when tree is decorated */}
+            <button
+              onClick={handleAddToCart}
+              className="
+                flex items-center gap-2
+                bg-green-600 hover:bg-green-500
+                px-4 py-2.5 rounded-xl
+                font-semibold text-white
+                shadow-lg shadow-green-500/30
+                transition-all duration-200
+                hover:scale-105
+              "
+            >
+              <ShoppingCart size={20} />
+              <span>Add to Cart</span>
+            </button>
+
             {/* Cart Button */}
             <CartIcon
               itemCount={cartStore.itemCount}

@@ -233,8 +233,8 @@ export type OrnamentEvent =
 export type TreeSize = 'small' | 'medium' | 'large';
 
 export interface ProductPrice {
-  amount: number;        // Price in cents (e.g., 14900 = $149.00)
-  currency: string;      // 'usd'
+  amount: number;        // Price in cents (e.g., 4900 = CHF 49.00)
+  currency: string;      // 'chf'
   stripePriceId: string; // Stripe Price ID for checkout
 }
 
@@ -359,7 +359,7 @@ export interface CheckoutRequest {
 // ============================================
 
 export function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `CHF ${(cents / 100).toFixed(2)}`;
 }
 
 export function calculateCartTotal(items: CartItem[]): number {

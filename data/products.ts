@@ -12,8 +12,8 @@ export const TREE_PRODUCTS: TreeProduct[] = [
     heightFt: 4,
     description: 'Perfect for apartments and small spaces. A charming tabletop option.',
     price: {
-      amount: 14900,
-      currency: 'usd',
+      amount: 4900,
+      currency: 'chf',
       stripePriceId: 'price_tree_small',
     },
     inStock: true,
@@ -26,8 +26,8 @@ export const TREE_PRODUCTS: TreeProduct[] = [
     heightFt: 6,
     description: 'The traditional family-sized tree. Ideal for living rooms.',
     price: {
-      amount: 29900,
-      currency: 'usd',
+      amount: 8900,
+      currency: 'chf',
       stripePriceId: 'price_tree_medium',
     },
     inStock: true,
@@ -40,8 +40,8 @@ export const TREE_PRODUCTS: TreeProduct[] = [
     heightFt: 8,
     description: 'A statement piece for large rooms and high ceilings.',
     price: {
-      amount: 49900,
-      currency: 'usd',
+      amount: 14900,
+      currency: 'chf',
       stripePriceId: 'price_tree_large',
     },
     inStock: true,
@@ -61,7 +61,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Timeless glass ball ornament with a reflective finish.',
     price: {
       amount: 599,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_sphere',
     },
     category: 'classic',
@@ -74,7 +74,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Modern geometric design with metallic sheen.',
     price: {
       amount: 799,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_cube',
     },
     category: 'shapes',
@@ -87,7 +87,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Elegant diamond-cut ornament that catches the light beautifully.',
     price: {
       amount: 999,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_diamond',
     },
     category: 'classic',
@@ -100,7 +100,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Adorable wrapped present ornament with ribbon detail.',
     price: {
       amount: 899,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_giftbox',
     },
     category: 'festive',
@@ -113,7 +113,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Delicate six-pointed snowflake with subtle glow.',
     price: {
       amount: 699,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_snowflake',
     },
     category: 'festive',
@@ -126,7 +126,7 @@ export const ORNAMENT_PRODUCTS: OrnamentProduct[] = [
     description: 'Romantic heart-shaped ornament with premium finish.',
     price: {
       amount: 799,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_orn_heart',
     },
     category: 'shapes',
@@ -146,7 +146,7 @@ export const TOPPER_PRODUCTS: TopperProduct[] = [
     description: 'Classic five-pointed star with brilliant gold finish and LED glow.',
     price: {
       amount: 1499,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_top_star',
     },
     inStock: true,
@@ -158,7 +158,7 @@ export const TOPPER_PRODUCTS: TopperProduct[] = [
     description: 'Elegant snowflake topper with sparkling crystal details.',
     price: {
       amount: 1299,
-      currency: 'usd',
+      currency: 'chf',
       stripePriceId: 'price_top_snowflake',
     },
     inStock: true,

@@ -6,11 +6,44 @@
 
 import { Cart, CartItem, CartItemType, CartItemCustomization, calculateCartTotal } from '../types';
 
-// In-memory cart store (keyed by sessionId)
+// Cart store with localStorage persistence
+const STORAGE_KEY = 'christmas_tree_cart';
 const cartStore: Map<string, Cart> = new Map();
 let listeners: Set<() => void> = new Set();
 
-const notifyListeners = () => listeners.forEach((l) => l());
+// Load cart from localStorage on init
+const loadFromStorage = () => {
+  try {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const data = JSON.parse(stored) as Record<string, Cart>;
+      Object.entries(data).forEach(([key, cart]) => cartStore.set(key, cart));
+    }
+  } catch (e) {
+    console.error('Failed to load cart from storage:', e);
+  }
+};
+
+// Save cart to localStorage
+const saveToStorage = () => {
+  try {
+    if (typeof window === 'undefined') return;
+    const data: Record<string, Cart> = {};
+    cartStore.forEach((cart, key) => (data[key] = cart));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save cart to storage:', e);
+  }
+};
+
+// Initialize from localStorage
+loadFromStorage();
+
+const notifyListeners = () => {
+  saveToStorage();
+  listeners.forEach((l) => l());
+};
 const generateId = () => `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 const generateItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -90,15 +123,22 @@ export async function addItem(args: {
  * Convex: mutation({ args: { sessionId, itemId }, handler: ... })
  */
 export async function removeItem(args: { sessionId: string; itemId: string }): Promise<Cart | null> {
-  const cart = cartStore.get(args.sessionId);
-  if (!cart) return null;
+  const existingCart = cartStore.get(args.sessionId);
+  if (!existingCart) return null;
 
-  cart.items = cart.items.filter((item) => item.id !== args.itemId);
-  cart.subtotal = calculateCartTotal(cart.items);
-  cart.updatedAt = Date.now();
+  const newItems = existingCart.items.filter((item) => item.id !== args.itemId);
 
+  // Create a new cart object to trigger React re-render
+  const updatedCart: Cart = {
+    ...existingCart,
+    items: newItems,
+    subtotal: calculateCartTotal(newItems),
+    updatedAt: Date.now(),
+  };
+
+  cartStore.set(args.sessionId, updatedCart);
   notifyListeners();
-  return cart;
+  return updatedCart;
 }
 
 /**
@@ -110,23 +150,32 @@ export async function updateQuantity(args: {
   itemId: string;
   quantity: number;
 }): Promise<Cart | null> {
-  const cart = cartStore.get(args.sessionId);
-  if (!cart) return null;
+  const existingCart = cartStore.get(args.sessionId);
+  if (!existingCart) return null;
 
-  const item = cart.items.find((i) => i.id === args.itemId);
-  if (item) {
-    if (args.quantity <= 0) {
-      // Remove item if quantity is 0 or negative
-      cart.items = cart.items.filter((i) => i.id !== args.itemId);
-    } else {
-      item.quantity = args.quantity;
-    }
-    cart.subtotal = calculateCartTotal(cart.items);
-    cart.updatedAt = Date.now();
+  let newItems: CartItem[];
+
+  if (args.quantity <= 0) {
+    // Remove item if quantity is 0 or negative
+    newItems = existingCart.items.filter((i) => i.id !== args.itemId);
+  } else {
+    // Update quantity - create new item objects
+    newItems = existingCart.items.map((item) =>
+      item.id === args.itemId ? { ...item, quantity: args.quantity } : item
+    );
   }
 
+  // Create a new cart object to trigger React re-render
+  const updatedCart: Cart = {
+    ...existingCart,
+    items: newItems,
+    subtotal: calculateCartTotal(newItems),
+    updatedAt: Date.now(),
+  };
+
+  cartStore.set(args.sessionId, updatedCart);
   notifyListeners();
-  return cart;
+  return updatedCart;
 }
 
 /**

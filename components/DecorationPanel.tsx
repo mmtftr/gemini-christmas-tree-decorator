@@ -203,14 +203,35 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
   const [expandedCategory, setExpandedCategory] = useState<OrnamentCategory | null>('classic');
   const [activePalette, setActivePalette] = useState<ColorPalette>('classic');
   const [showPreview, setShowPreview] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const TOPPER_TYPES: TopperType[] = ['star', 'snowflake'];
 
   return (
     <div className="absolute bottom-0 left-0 right-0 pointer-events-none p-4">
       <div className="pointer-events-auto max-w-4xl mx-auto">
+        {/* Collapse/Expand Toggle */}
+        <div className="flex justify-center mb-2">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="bg-black/70 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 text-xs text-gray-300 hover:text-white hover:bg-black/80 transition-all flex items-center gap-1.5"
+          >
+            {isCollapsed ? (
+              <>
+                <ChevronUp size={14} />
+                Show Panel
+              </>
+            ) : (
+              <>
+                <ChevronDown size={14} />
+                Hide Panel
+              </>
+            )}
+          </button>
+        </div>
+
         {/* Main Panel */}
-        <div className="bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className={`bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-h-0 opacity-0 border-transparent' : 'max-h-[500px] opacity-100'}`}>
           {/* Mode Tabs */}
           <div className="flex border-b border-white/10">
             <button
