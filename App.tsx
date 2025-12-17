@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { PineTree } from './components/PineTree';
@@ -9,14 +9,36 @@ import { DecorationPanel } from './components/DecorationPanel';
 import { ControlPanel } from './components/ControlPanel';
 import { SceneEnvironment } from './components/SceneEnvironment';
 import { ChristmasMusicPanel } from './components/ChristmasMusicPanel';
+import { CartIcon } from './components/CartIcon';
+import { CartDrawer } from './components/CartDrawer';
+import { CheckoutForm } from './components/CheckoutForm';
+import { OrderConfirmation } from './components/OrderConfirmation';
 import { useTreeStore } from './data/treeStore';
+import { useCartStore } from './data/cartStore';
 import { SCENE_THEMES, SceneTheme, DEFAULT_THEME } from './data/themes';
-import { OrnamentType, TopperType, EditorMode, TransformMode, OrnamentData } from './types';
-import { Share2, Users } from 'lucide-react';
+import {
+  TREE_PRODUCTS,
+  getOrnamentProductByType,
+  getTopperProductByType,
+} from './data/products';
+import {
+  OrnamentType,
+  TopperType,
+  EditorMode,
+  TransformMode,
+  OrnamentData,
+  TreeProduct,
+  ShippingAddress,
+  Order,
+} from './types';
+import { ShoppingCart } from 'lucide-react';
 
 export default function App() {
   // Tree Store (data layer - ready for Convex)
   const store = useTreeStore();
+
+  // Cart Store
+  const cartStore = useCartStore();
 
   // Theme state
   const [currentTheme, setCurrentTheme] = useState<SceneTheme>(DEFAULT_THEME);
@@ -32,6 +54,13 @@ export default function App() {
   const [selectedOrnamentId, setSelectedOrnamentId] = useState<string | null>(null);
   const [transformMode, setTransformMode] = useState<TransformMode>('translate');
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+
+  // E-commerce state
+  const [selectedTreeProduct, setSelectedTreeProduct] = useState<TreeProduct>(TREE_PRODUCTS[1]); // Medium by default
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isOrderConfirmationOpen, setIsOrderConfirmationOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   // Update tree config when theme changes
   const handleThemeChange = useCallback((theme: SceneTheme) => {
@@ -88,6 +117,7 @@ export default function App() {
       const dz = camera.position.z - activePlacement[2];
       const rotationY = Math.atan2(dx, dz);
 
+      // Add ornament to tree visualization
       await store.addOrnament({
         type: selectedOrnamentType,
         color: selectedColor,
@@ -95,8 +125,14 @@ export default function App() {
         rotation: [0, rotationY, 0] as [number, number, number],
         scale: 1,
       });
+
+      // Add ornament to cart
+      const ornamentProduct = getOrnamentProductByType(selectedOrnamentType);
+      if (ornamentProduct) {
+        await cartStore.addOrnamentToCart(ornamentProduct, selectedColor, activePlacement);
+      }
     },
-    [mode, activePlacement, selectedOrnamentType, selectedColor, store]
+    [mode, activePlacement, selectedOrnamentType, selectedColor, store, cartStore]
   );
 
   const handleTreeOut = useCallback(() => {
@@ -114,6 +150,7 @@ export default function App() {
   const handleTopperClick = useCallback(async () => {
     if (mode !== 'topper') return;
 
+    // Add topper to tree visualization
     await store.setTopper({
       type: selectedTopperType,
       color: selectedColor,
@@ -121,8 +158,59 @@ export default function App() {
       glow: true,
     });
 
+    // Add topper to cart
+    const topperProduct = getTopperProductByType(selectedTopperType);
+    if (topperProduct) {
+      await cartStore.addTopperToCart(topperProduct, selectedColor);
+    }
+
     setMode('view');
-  }, [mode, selectedTopperType, selectedColor, store]);
+  }, [mode, selectedTopperType, selectedColor, store, cartStore]);
+
+  // Tree product selection handler
+  const handleSelectTreeProduct = useCallback(
+    async (product: TreeProduct) => {
+      setSelectedTreeProduct(product);
+      // Add tree to cart
+      await cartStore.addTreeToCart(product);
+    },
+    [cartStore]
+  );
+
+  // Checkout handler
+  const handleCheckout = useCallback(async (address: ShippingAddress) => {
+    if (!cartStore.cart) return;
+
+    // Calculate totals
+    const shippingCost = cartStore.subtotal >= 50000 ? 0 : 1999;
+    const tax = Math.round(cartStore.subtotal * 0.08);
+    const total = cartStore.subtotal + shippingCost + tax;
+
+    // Create a mock order (in real app, this would go through Stripe)
+    const order: Order = {
+      id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      sessionId: 'local-session',
+      cartSnapshot: cartStore.cart,
+      shippingAddress: address,
+      stripeSessionId: `mock_stripe_${Date.now()}`,
+      status: 'paid',
+      subtotal: cartStore.subtotal,
+      shippingCost,
+      tax,
+      total,
+      treeConfigSnapshot: store.treeConfig,
+      ornamentsSnapshot: store.ornaments,
+      topperSnapshot: store.topper,
+      createdAt: Date.now(),
+      paidAt: Date.now(),
+    };
+
+    // Clear cart and show confirmation
+    await cartStore.clearCart();
+    setCompletedOrder(order);
+    setIsCheckoutOpen(false);
+    setIsOrderConfirmationOpen(true);
+  }, [cartStore, store]);
 
   const handleClearAll = useCallback(async () => {
     await store.clearOrnaments();
@@ -251,24 +339,19 @@ export default function App() {
             onTreeConfigChange={store.updateTreeConfig}
             ornamentCount={store.ornaments.length}
             maxOrnaments={store.currentUser?.quota.maxOrnaments ?? 100}
+            selectedTreeProduct={selectedTreeProduct}
+            onSelectTreeProduct={handleSelectTreeProduct}
+            hasTreeInCart={cartStore.hasTree}
           />
 
-          {/* Right Panel - Session Info & Music */}
+          {/* Right Panel - Cart & Music */}
           <div className="pointer-events-auto flex flex-col items-end gap-3">
-            {/* Share Button (placeholder) */}
-            <button
-              className="bg-black/60 backdrop-blur-xl px-4 py-2.5 rounded-xl border border-white/10 flex items-center gap-2 hover:bg-black/70 transition-colors text-sm"
-              onClick={() => alert('Share functionality will be available with Convex backend!')}
-            >
-              <Share2 size={16} />
-              Share
-            </button>
-
-            {/* Collaborators Placeholder */}
-            <div className="bg-black/60 backdrop-blur-xl px-3 py-2 rounded-xl border border-white/10 flex items-center gap-2 text-xs text-gray-400">
-              <Users size={14} />
-              <span>Solo Mode</span>
-            </div>
+            {/* Cart Button */}
+            <CartIcon
+              itemCount={cartStore.itemCount}
+              subtotal={cartStore.subtotal}
+              onClick={() => setIsCartOpen(true)}
+            />
 
             {/* Christmas Music Panel */}
             <ChristmasMusicPanel />
@@ -303,17 +386,17 @@ export default function App() {
       {!welcomeDismissed && mode === 'view' && store.ornaments.length === 0 && !store.topper && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="pointer-events-auto bg-black/70 backdrop-blur-xl px-8 py-6 rounded-2xl border border-white/10 text-center max-w-md">
-            <h2 className="text-xl font-semibold mb-3">Welcome!</h2>
+            <h2 className="text-xl font-semibold mb-3">Welcome to Tree Shop!</h2>
             <p className="text-sm text-gray-300 mb-4">
-              Choose a <span className="text-green-400 font-medium">theme</span> from the left panel,
-              then switch to <span className="text-green-400 font-medium">Decorate</span> mode below to add ornaments.
+              Select a <span className="text-green-400 font-medium">tree size</span> from the left panel,
+              then switch to <span className="text-green-400 font-medium">Decorate</span> mode to add ornaments.
             </p>
             <div className="flex justify-center gap-4 text-xs text-gray-500 mb-4">
-              <span>🎄 6 Themes</span>
+              <span>🎄 3 Tree Sizes</span>
               <span>•</span>
-              <span>6 Ornament Types</span>
+              <span>6 Ornaments</span>
               <span>•</span>
-              <span>4 Tree Toppers</span>
+              <span>2 Toppers</span>
             </div>
             <button
               onClick={() => setWelcomeDismissed(true)}
@@ -324,6 +407,43 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Cart Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cartStore.cart}
+        onUpdateQuantity={cartStore.updateQuantity}
+        onRemoveItem={cartStore.removeFromCart}
+        onClearCart={cartStore.clearCart}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
+      />
+
+      {/* Checkout Form */}
+      {cartStore.cart && (
+        <CheckoutForm
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          cart={cartStore.cart}
+          onSubmit={handleCheckout}
+        />
+      )}
+
+      {/* Order Confirmation */}
+      <OrderConfirmation
+        isOpen={isOrderConfirmationOpen}
+        onClose={() => {
+          setIsOrderConfirmationOpen(false);
+          setCompletedOrder(null);
+          // Reset for new tree
+          store.clearOrnaments();
+          store.setTopper(null);
+        }}
+        order={completedOrder}
+      />
     </div>
   );
 }

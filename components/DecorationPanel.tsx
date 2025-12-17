@@ -8,9 +8,16 @@ import {
   TopperType,
   EditorMode,
   TransformMode,
+  formatPrice,
 } from '../types';
 import { OrnamentPreview } from './Ornaments';
 import { TopperPreview } from './TreeTopper';
+import {
+  ORNAMENT_PRODUCTS,
+  TOPPER_PRODUCTS,
+  getOrnamentProductByType,
+  getTopperProductByType,
+} from '../data/products';
 import {
   Sparkles,
   TreeDeciduous,
@@ -289,23 +296,29 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
                               <div className="px-3 pb-3 grid grid-cols-3 gap-2">
                                 {ORNAMENT_CATEGORIES[category].map((type) => {
                                   const isSelected = selectedOrnamentType === type;
+                                  const product = getOrnamentProductByType(type);
 
                                   return (
                                     <button
                                       key={type}
                                       onClick={() => onOrnamentTypeChange(type as OrnamentType)}
-                                      className={`p-3 rounded-lg transition-all flex flex-col items-center gap-1 ${
+                                      className={`p-2 rounded-lg transition-all flex flex-col items-center gap-1 ${
                                         isSelected
                                           ? 'bg-green-600/30 ring-2 ring-green-400'
                                           : 'bg-white/5 hover:bg-white/10'
                                       }`}
                                       style={{ color: selectedColor }}
-                                      title={type}
+                                      title={product?.name || type}
                                     >
-                                      <OrnamentIcon type={type as OrnamentType} className="w-6 h-6" />
+                                      <OrnamentIcon type={type as OrnamentType} className="w-5 h-5" />
                                       <span className="text-[10px] text-gray-400 capitalize">
                                         {type.replace(/([A-Z])/g, ' $1').trim()}
                                       </span>
+                                      {product && (
+                                        <span className="text-[9px] text-green-400 font-medium">
+                                          {formatPrice(product.price.amount)}
+                                        </span>
+                                      )}
                                     </button>
                                   );
                                 })}
@@ -322,23 +335,31 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
                       <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wide">
                         Tree Toppers
                       </h3>
-                      <div className="grid grid-cols-4 gap-2">
-                        {TOPPER_TYPES.map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => onTopperTypeChange(type)}
-                            className={`p-3 rounded-lg transition-all flex flex-col items-center gap-1 ${
-                              selectedTopperType === type
-                                ? 'bg-yellow-600/30 ring-2 ring-yellow-400'
-                                : 'bg-white/5 hover:bg-white/10'
-                            }`}
-                            style={{ color: selectedColor }}
-                          >
-                            {type === 'star' && <Star className="w-6 h-6" />}
-                            {type === 'snowflake' && <Snowflake className="w-6 h-6" />}
-                            <span className="text-[10px] text-gray-400 capitalize">{type}</span>
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-2 gap-2">
+                        {TOPPER_TYPES.map((type) => {
+                          const product = getTopperProductByType(type);
+                          return (
+                            <button
+                              key={type}
+                              onClick={() => onTopperTypeChange(type)}
+                              className={`p-3 rounded-lg transition-all flex flex-col items-center gap-1 ${
+                                selectedTopperType === type
+                                  ? 'bg-yellow-600/30 ring-2 ring-yellow-400'
+                                  : 'bg-white/5 hover:bg-white/10'
+                              }`}
+                              style={{ color: selectedColor }}
+                            >
+                              {type === 'star' && <Star className="w-6 h-6" />}
+                              {type === 'snowflake' && <Snowflake className="w-6 h-6" />}
+                              <span className="text-[10px] text-gray-400 capitalize">{product?.name || type}</span>
+                              {product && (
+                                <span className="text-[9px] text-green-400 font-medium">
+                                  {formatPrice(product.price.amount)}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

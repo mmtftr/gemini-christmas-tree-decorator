@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { SCENE_THEMES, SceneTheme, ThemeId } from '../data/themes';
-import { TreeConfig } from '../types';
+import { TreeConfig, TreeProduct, formatPrice } from '../types';
+import { TREE_PRODUCTS } from '../data/products';
+import { useAction, api } from '../lib/convex';
 import {
   Palette,
   RefreshCw,
@@ -9,6 +11,10 @@ import {
   Snowflake,
   Sun,
   TreeDeciduous,
+  Sparkles,
+  Loader2,
+  ShoppingCart,
+  Check,
 } from 'lucide-react';
 
 interface ControlPanelProps {
@@ -18,6 +24,9 @@ interface ControlPanelProps {
   onTreeConfigChange: (updates: Partial<TreeConfig>) => void;
   ornamentCount: number;
   maxOrnaments: number;
+  selectedTreeProduct: TreeProduct | null;
+  onSelectTreeProduct: (product: TreeProduct) => void;
+  hasTreeInCart: boolean;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -27,9 +36,61 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onTreeConfigChange,
   ornamentCount,
   maxOrnaments,
+  selectedTreeProduct,
+  onSelectTreeProduct,
+  hasTreeInCart,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [activeTab, setActiveTab] = useState<'theme' | 'customize'>('theme');
+  const [activeTab, setActiveTab] = useState<'shop' | 'theme' | 'customize'>('shop');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Use the Convex-style action hook for AI theme generation
+  const generateTheme = useAction(api.ai.generateTheme);
+
+  const handleGenerateTheme = async () => {
+    if (!aiPrompt.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    setAiError(null);
+
+    try {
+      const generated = await generateTheme({ prompt: aiPrompt });
+
+      // Convert AI response to SceneTheme format
+      const aiTheme: SceneTheme = {
+        id: 'ai-generated',
+        name: 'AI: ' + aiPrompt.slice(0, 20) + (aiPrompt.length > 20 ? '...' : ''),
+        description: generated.description,
+        preview: '🤖',
+        treeColor: generated.treeColor,
+        snowAmount: generated.snowAmount,
+        skyColor: generated.backgroundColor,
+        groundColor: '#e8f4f8',
+        fogColor: generated.backgroundColor,
+        fogDensity: 0.02,
+        ambientIntensity: 0.4,
+        ambientColor: '#ffffff',
+        mainLightColor: '#ffffff',
+        mainLightIntensity: 1.0,
+        accentLightColor: generated.ornamentColors[0] || '#ffffff',
+        accentLightIntensity: 0.5,
+        snowfall: generated.snowAmount > 0.3,
+        snowfallIntensity: generated.snowAmount,
+        starsVisible: true,
+        ornamentColors: generated.ornamentColors,
+      };
+
+      onThemeChange(aiTheme);
+      setAiPrompt('');
+    } catch (error) {
+      console.error('Failed to generate theme:', error);
+      setAiError(error instanceof Error ? error.message : 'Failed to generate theme');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="pointer-events-auto bg-black/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-w-xs">
@@ -60,28 +121,101 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           {/* Tabs */}
           <div className="flex border-b border-white/10">
             <button
+              onClick={() => setActiveTab('shop')}
+              className={`flex-1 px-2 py-2 text-xs font-medium transition-colors ${
+                activeTab === 'shop'
+                  ? 'text-white bg-white/10 border-b-2 border-green-400'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <ShoppingCart size={14} className="inline mr-1" />
+              Shop
+            </button>
+            <button
               onClick={() => setActiveTab('theme')}
-              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex-1 px-2 py-2 text-xs font-medium transition-colors ${
                 activeTab === 'theme'
                   ? 'text-white bg-white/10 border-b-2 border-green-400'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <Palette size={14} className="inline mr-1.5" />
-              Themes
+              <Palette size={14} className="inline mr-1" />
+              Theme
             </button>
             <button
               onClick={() => setActiveTab('customize')}
-              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex-1 px-2 py-2 text-xs font-medium transition-colors ${
                 activeTab === 'customize'
                   ? 'text-white bg-white/10 border-b-2 border-green-400'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <TreeDeciduous size={14} className="inline mr-1.5" />
-              Customize
+              <TreeDeciduous size={14} className="inline mr-1" />
+              Tree
             </button>
           </div>
+
+          {/* Shop Tab - Tree Selection */}
+          {activeTab === 'shop' && (
+            <div className="p-3 space-y-3">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">
+                Select Your Tree
+              </div>
+
+              <div className="space-y-2">
+                {TREE_PRODUCTS.map((tree) => {
+                  const isSelected = selectedTreeProduct?.id === tree.id;
+                  const isInCart = hasTreeInCart && isSelected;
+
+                  return (
+                    <button
+                      key={tree.id}
+                      onClick={() => onSelectTreeProduct(tree)}
+                      className={`w-full p-3 rounded-xl text-left transition-all ${
+                        isSelected
+                          ? 'bg-green-600/30 ring-2 ring-green-400'
+                          : 'bg-white/5 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">🎄</div>
+                          <div>
+                            <div className="font-medium text-sm text-white">
+                              {tree.name}
+                            </div>
+                            <div className="text-[10px] text-gray-400">
+                              {tree.heightFt}ft • {tree.leadTimeDays} day delivery
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-green-400 font-semibold text-sm">
+                            {formatPrice(tree.price.amount)}
+                          </div>
+                          {isInCart && (
+                            <div className="flex items-center gap-1 text-[10px] text-green-400">
+                              <Check size={10} />
+                              In cart
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1.5">
+                        {tree.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {!hasTreeInCart && selectedTreeProduct && (
+                <p className="text-[10px] text-yellow-400 text-center">
+                  Click "Add to Cart" in decorations to add this tree
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Theme Selection */}
           {activeTab === 'theme' && (

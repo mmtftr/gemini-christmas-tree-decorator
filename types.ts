@@ -225,3 +225,143 @@ export type OrnamentEvent =
   | { type: 'participant_joined'; participant: SessionParticipant }
   | { type: 'participant_left'; participantId: string }
   | { type: 'cursor_moved'; userId: string; position: [number, number, number] };
+
+// ============================================
+// E-COMMERCE TYPES
+// ============================================
+
+export type TreeSize = 'small' | 'medium' | 'large';
+
+export interface ProductPrice {
+  amount: number;        // Price in cents (e.g., 14900 = $149.00)
+  currency: string;      // 'usd'
+  stripePriceId: string; // Stripe Price ID for checkout
+}
+
+export interface TreeProduct {
+  id: string;
+  name: string;
+  size: TreeSize;
+  heightFt: number;        // 4, 6, or 8
+  description: string;
+  price: ProductPrice;
+  imageUrl?: string;
+  inStock: boolean;
+  leadTimeDays: number;    // 5-7, 7-10, 10-14
+}
+
+export interface OrnamentProduct {
+  id: string;
+  type: OrnamentType;
+  name: string;
+  description: string;
+  price: ProductPrice;
+  category: OrnamentCategory;
+  imageUrl?: string;
+  inStock: boolean;
+}
+
+export interface TopperProduct {
+  id: string;
+  type: TopperType;
+  name: string;
+  description: string;
+  price: ProductPrice;
+  imageUrl?: string;
+  inStock: boolean;
+}
+
+// ============================================
+// SHOPPING CART
+// ============================================
+
+export type CartItemType = 'tree' | 'ornament' | 'topper';
+
+export interface CartItemCustomization {
+  color: string;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+}
+
+export interface CartItem {
+  id: string;              // Unique cart item ID
+  productType: CartItemType;
+  productId: string;       // Reference to product
+  quantity: number;
+  unitPrice: number;       // Price in cents at time of adding
+  customization?: CartItemCustomization;
+}
+
+export interface Cart {
+  id: string;
+  sessionId: string;
+  items: CartItem[];
+  subtotal: number;        // In cents
+  createdAt: number;
+  updatedAt: number;
+}
+
+// ============================================
+// CHECKOUT & ORDERS
+// ============================================
+
+export interface ShippingAddress {
+  fullName: string;
+  email: string;
+  phone?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+export interface Order {
+  id: string;
+  sessionId: string;
+  cartSnapshot: Cart;
+  shippingAddress: ShippingAddress;
+  stripeSessionId: string;
+  stripePaymentIntentId?: string;
+  status: OrderStatus;
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  treeConfigSnapshot: TreeConfig;
+  ornamentsSnapshot: OrnamentData[];
+  topperSnapshot: TreeTopperData | null;
+  createdAt: number;
+  paidAt?: number;
+  shippedAt?: number;
+  deliveredAt?: number;
+}
+
+export interface CheckoutRequest {
+  cartId: string;
+  shippingAddress: ShippingAddress;
+  treeConfig: TreeConfig;
+  ornaments: OrnamentData[];
+  topper: TreeTopperData | null;
+}
+
+// ============================================
+// PRICE UTILITIES
+// ============================================
+
+export function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+export function calculateCartTotal(items: CartItem[]): number {
+  return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+}
