@@ -10,7 +10,8 @@
  * 3. Update this file to import from 'convex/react' and use real mutations/actions
  */
 
-import { OrnamentData, TreeTopperData, TreeConfig, OrnamentType, TopperType } from '../types';
+import { OrnamentData, TreeTopperData, TreeConfig, OrnamentType, TopperType, GeneratedTheme } from '../types';
+import { GoogleGenAI, Type } from "@google/genai";
 
 // ============================================
 // ORNAMENTS API
@@ -159,6 +160,53 @@ export const session = {
 };
 
 // ============================================
+// AI API
+// ============================================
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+
+export const ai = {
+  /** Generate theme using Gemini. Convex: action */
+  generateTheme: async (args: { prompt: string }): Promise<GeneratedTheme> => {
+    const model = "gemini-2.0-flash";
+
+    const systemInstruction = `You are an expert holiday decorator and color theorist.
+    Generate a Christmas tree visual theme based on the user's request.
+    Provide hex colors for the tree and ornaments, a background color, and a snow amount (0 to 1).`;
+
+    const response = await genAI.models.generateContent({
+      model,
+      contents: args.prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            treeColor: { type: Type.STRING, description: "Hex color code for the pine needles" },
+            ornamentColors: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Array of 3-5 hex color codes for ornaments"
+            },
+            snowAmount: { type: Type.NUMBER, description: "Amount of snow/frost on tree (0.0 to 1.0)" },
+            backgroundColor: { type: Type.STRING, description: "Hex color for the scene background" },
+            description: { type: Type.STRING, description: "Short description of the theme vibe" }
+          },
+          required: ["treeColor", "ornamentColors", "snowAmount", "backgroundColor", "description"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text) as GeneratedTheme;
+    }
+
+    throw new Error("Failed to generate theme");
+  }
+};
+
+// ============================================
 // UNIFIED API EXPORT
 // ============================================
 
@@ -173,6 +221,7 @@ export const api = {
   ornaments,
   topper,
   session,
+  ai,
 } as const;
 
 export type Api = typeof api;
