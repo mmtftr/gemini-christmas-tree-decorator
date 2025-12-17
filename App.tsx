@@ -284,7 +284,7 @@ export default function App() {
         {/* Bottom - Decoration Panel */}
         <DecorationPanel
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={handleModeChange}
           selectedOrnamentType={selectedOrnamentType}
           onOrnamentTypeChange={setSelectedOrnamentType}
           selectedTopperType={selectedTopperType}
@@ -295,6 +295,10 @@ export default function App() {
           ornamentCount={store.ornaments.length}
           maxOrnaments={store.currentUser?.quota.maxOrnaments ?? 100}
           topperSet={!!store.topper}
+          transformMode={transformMode}
+          onTransformModeChange={setTransformMode}
+          selectedOrnamentId={selectedOrnamentId}
+          onDeleteSelectedOrnament={() => selectedOrnamentId && handleOrnamentDelete(selectedOrnamentId)}
         />
       </div>
 

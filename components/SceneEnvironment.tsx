@@ -11,8 +11,8 @@ interface SceneEnvironmentProps {
 export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => {
   return (
     <>
-      {/* Fog */}
-      <fog attach="fog" args={[theme.fogColor, 10, 50]} />
+      {/* Fog - key forces remount on theme change */}
+      <fog key={`fog-${theme.id}`} attach="fog" args={[theme.fogColor, 10, 50]} />
 
       {/* Ambient Light */}
       <ambientLight intensity={theme.ambientIntensity} color={theme.ambientColor} />
@@ -57,9 +57,10 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         color="#ffffff"
       />
 
-      {/* Stars */}
+      {/* Stars - key forces remount on theme change */}
       {theme.starsVisible && (
         <Stars
+          key={`stars-${theme.id}`}
           radius={80}
           depth={50}
           count={3000}
@@ -70,9 +71,10 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         />
       )}
 
-      {/* Snowfall */}
+      {/* Snowfall - key forces remount on theme change */}
       {theme.snowfall && (
         <Snow
+          key={`snow-${theme.id}-${theme.snowfallIntensity}`}
           count={1500}
           intensity={theme.snowfallIntensity}
           area={25}
@@ -80,8 +82,13 @@ export const SceneEnvironment: React.FC<SceneEnvironmentProps> = ({ theme }) => 
         />
       )}
 
-      {/* Ambient particles (magic dust) */}
-      <AmbientParticles count={80} color={theme.accentLightColor} area={12} />
+      {/* Ambient particles (magic dust) - key forces remount on theme change */}
+      <AmbientParticles
+        key={`particles-${theme.id}`}
+        count={80}
+        color={theme.accentLightColor}
+        area={12}
+      />
 
       {/* Ground plane */}
       <mesh

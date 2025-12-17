@@ -54,7 +54,7 @@ export interface OrnamentData {
 // TREE TOPPER
 // ============================================
 
-export type TopperType = 'star' | 'angel' | 'bow' | 'snowflake';
+export type TopperType = 'star' | 'snowflake';
 
 export interface TreeTopperData {
   id: string;

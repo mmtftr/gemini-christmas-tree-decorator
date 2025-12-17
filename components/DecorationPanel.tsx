@@ -440,54 +440,57 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
                   )}
                 </div>
 
-                {/* Right: Preview & Quota */}
-                <div className="w-48 space-y-3">
-                  {/* 3D Preview */}
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wide">
-                        Preview
-                      </h3>
-                      <button
-                        onClick={() => setShowPreview(!showPreview)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        {showPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      </button>
+                {/* Right: Preview & Quota - hide in edit mode */}
+                {mode !== 'edit' && (
+                  <div className="w-48 space-y-3">
+                    {/* 3D Preview */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wide">
+                          Preview
+                        </h3>
+                        <button
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          {showPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+                      </div>
+                      {showPreview && (
+                        <PreviewCanvas
+                          type={mode === 'topper' ? selectedTopperType : selectedOrnamentType}
+                          color={selectedColor}
+                          isTopper={mode === 'topper'}
+                        />
+                      )}
                     </div>
-                    {showPreview && (
-                      <PreviewCanvas
-                        type={mode === 'topper' ? selectedTopperType : selectedOrnamentType}
-                        color={selectedColor}
-                        isTopper={mode === 'topper'}
+
+                    {/* Quota */}
+                    <div className="p-3 rounded-lg bg-white/5 space-y-2">
+                      <QuotaDisplay
+                        used={ornamentCount}
+                        max={maxOrnaments}
+                        label="Ornaments"
                       />
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Quota */}
-                  <div className="p-3 rounded-lg bg-white/5 space-y-2">
-                    <QuotaDisplay
-                      used={ornamentCount}
-                      max={maxOrnaments}
-                      label="Ornaments"
-                    />
+                    {/* Clear Button */}
+                    <button
+                      onClick={onClearAll}
+                      disabled={ornamentCount === 0}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Trash2 size={14} />
+                      Clear All
+                    </button>
                   </div>
-
-                  {/* Clear Button */}
-                  <button
-                    onClick={onClearAll}
-                    disabled={ornamentCount === 0}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Trash2 size={14} />
-                    Clear All
-                  </button>
-                </div>
+                )}
               </div>
 
               {/* Help Text */}
               <div className="mt-4 pt-3 border-t border-white/10 text-xs text-gray-500 text-center">
                 {mode === 'decorate' && 'Click on the tree to place ornaments. Click ornaments to remove.'}
+                {mode === 'edit' && 'Click an ornament to select it, then drag the gizmo to move or rotate.'}
                 {mode === 'topper' && 'Click the top of the tree to place your topper.'}
               </div>
             </div>

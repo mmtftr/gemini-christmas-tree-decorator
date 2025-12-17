@@ -1,6 +1,13 @@
+/**
+ * @deprecated Use convex/ai.ts instead. This file is kept for reference only.
+ * Import from lib/convex.tsx: import { useAction, api } from '../lib/convex';
+ * Then use: const generateTheme = useAction(api.ai.generateTheme);
+ */
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GeneratedTheme } from '../types';
 
+/** @deprecated */
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateTreeTheme = async (prompt: string): Promise<GeneratedTheme> => {

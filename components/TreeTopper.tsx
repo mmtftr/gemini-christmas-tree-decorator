@@ -97,138 +97,6 @@ const StarTopper: React.FC<{ color: string; glow: boolean }> = ({ color, glow })
 };
 
 // ============================================
-// ANGEL TOPPER
-// ============================================
-
-const AngelTopper: React.FC<{ color: string; glow: boolean }> = ({ color, glow }) => {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      const time = state.clock.getElapsedTime();
-      // Gentle hovering motion
-      groupRef.current.position.y = Math.sin(time * 2) * 0.02;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {/* Body/Dress */}
-      <mesh castShadow position={[0, -0.15, 0]}>
-        <coneGeometry args={[0.2, 0.35, 16]} />
-        <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} />
-      </mesh>
-
-      {/* Head */}
-      <mesh castShadow position={[0, 0.08, 0]}>
-        <sphereGeometry args={[0.1, 16, 16]} />
-        <meshStandardMaterial color="#ffe4c4" roughness={0.6} metalness={0} />
-      </mesh>
-
-      {/* Halo */}
-      <mesh position={[0, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.12, 0.015, 8, 32]} />
-        <meshStandardMaterial
-          color="#ffd700"
-          metalness={0.9}
-          roughness={0.1}
-          emissive="#ffd700"
-          emissiveIntensity={glow ? 1 : 0.3}
-        />
-      </mesh>
-
-      {/* Wings */}
-      {[-1, 1].map((side) => (
-        <mesh
-          key={side}
-          position={[side * 0.15, 0, -0.05]}
-          rotation={[0, side * 0.3, 0]}
-          castShadow
-        >
-          <sphereGeometry args={[0.15, 8, 8, 0, Math.PI]} />
-          <meshStandardMaterial
-            color="#ffffff"
-            transparent
-            opacity={0.8}
-            roughness={0.3}
-            metalness={0.1}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-
-      {/* Glow */}
-      {glow && <pointLight color="#ffd700" intensity={2} distance={1.5} />}
-    </group>
-  );
-};
-
-// ============================================
-// BOW TOPPER
-// ============================================
-
-const BowTopper: React.FC<{ color: string; glow: boolean }> = ({ color, glow }) => {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      const time = state.clock.getElapsedTime();
-      groupRef.current.rotation.y = Math.sin(time) * 0.1;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {/* Main bow loops */}
-      {[-1, 1].map((side) => (
-        <mesh
-          key={side}
-          position={[side * 0.2, 0.05, 0]}
-          rotation={[0, 0, side * 0.4]}
-          castShadow
-        >
-          <torusGeometry args={[0.15, 0.05, 8, 16, Math.PI]} />
-          <meshStandardMaterial
-            color={color}
-            roughness={0.3}
-            metalness={0.3}
-            emissive={color}
-            emissiveIntensity={glow ? 0.3 : 0}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-
-      {/* Center knot */}
-      <mesh castShadow>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshStandardMaterial color={color} roughness={0.3} metalness={0.4} />
-      </mesh>
-
-      {/* Ribbon tails */}
-      {[-1, 1].map((side) => (
-        <mesh
-          key={`tail-${side}`}
-          position={[side * 0.05, -0.2, 0]}
-          rotation={[0, 0, side * 0.15]}
-          castShadow
-        >
-          <boxGeometry args={[0.08, 0.3, 0.02]} />
-          <meshStandardMaterial
-            color={color}
-            roughness={0.3}
-            metalness={0.3}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-
-      {glow && <pointLight color={color} intensity={1.5} distance={1} />}
-    </group>
-  );
-};
-
-// ============================================
 // SNOWFLAKE TOPPER
 // ============================================
 
@@ -331,10 +199,6 @@ export const TreeTopper: React.FC<TreeTopperProps> = ({
     switch (type) {
       case 'star':
         return <StarTopper color={color} glow={glow} />;
-      case 'angel':
-        return <AngelTopper color={color} glow={glow} />;
-      case 'bow':
-        return <BowTopper color={color} glow={glow} />;
       case 'snowflake':
         return <SnowflakeTopper color={color} glow={glow} />;
       default:
@@ -406,8 +270,6 @@ export const TopperPreview: React.FC<TopperPreviewProps> = ({ type, color, glow 
   return (
     <group ref={groupRef} scale={0.6}>
       {type === 'star' && <StarTopper color={color} glow={glow} />}
-      {type === 'angel' && <AngelTopper color={color} glow={glow} />}
-      {type === 'bow' && <BowTopper color={color} glow={glow} />}
       {type === 'snowflake' && <SnowflakeTopper color={color} glow={glow} />}
     </group>
   );
