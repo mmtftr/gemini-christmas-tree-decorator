@@ -199,7 +199,8 @@ export interface GeneratedTheme {
 // UI STATE
 // ============================================
 
-export type EditorMode = 'view' | 'decorate' | 'topper';
+export type EditorMode = 'view' | 'decorate' | 'topper' | 'edit';
+export type TransformMode = 'translate' | 'rotate';
 
 export interface EditorState {
   mode: EditorMode;
@@ -207,6 +208,8 @@ export interface EditorState {
   selectedTopperType: TopperType;
   selectedColor: string;
   activePlacement: [number, number, number] | null;
+  selectedOrnamentId: string | null;
+  transformMode: TransformMode;
 }
 
 // ============================================

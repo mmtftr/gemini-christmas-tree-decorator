@@ -7,6 +7,7 @@ import {
   ORNAMENT_CATEGORIES,
   TopperType,
   EditorMode,
+  TransformMode,
 } from '../types';
 import { OrnamentPreview } from './Ornaments';
 import { TopperPreview } from './TreeTopper';
@@ -22,6 +23,9 @@ import {
   Crown,
   ChevronDown,
   ChevronUp,
+  Move,
+  RotateCw,
+  MousePointer2,
 } from 'lucide-react';
 
 // ============================================
@@ -164,6 +168,11 @@ interface DecorationPanelProps {
   ornamentCount: number;
   maxOrnaments: number;
   topperSet: boolean;
+  // Edit mode props
+  transformMode?: TransformMode;
+  onTransformModeChange?: (mode: TransformMode) => void;
+  selectedOrnamentId?: string | null;
+  onDeleteSelectedOrnament?: () => void;
 }
 
 export const DecorationPanel: React.FC<DecorationPanelProps> = ({
@@ -179,6 +188,10 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
   ornamentCount,
   maxOrnaments,
   topperSet,
+  transformMode = 'translate',
+  onTransformModeChange,
+  selectedOrnamentId,
+  onDeleteSelectedOrnament,
 }) => {
   const [expandedCategory, setExpandedCategory] = useState<OrnamentCategory | null>('classic');
   const [activePalette, setActivePalette] = useState<ColorPalette>('classic');
@@ -213,6 +226,17 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
             >
               <TreeDeciduous size={16} />
               Decorate
+            </button>
+            <button
+              onClick={() => onModeChange('edit')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                mode === 'edit'
+                  ? 'bg-blue-600/30 text-blue-300 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <MousePointer2 size={16} />
+              Edit
             </button>
             <button
               onClick={() => onModeChange('topper')}
@@ -321,49 +345,99 @@ export const DecorationPanel: React.FC<DecorationPanelProps> = ({
                     </div>
                   )}
 
-                  {/* Color Selection */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  {mode === 'edit' && (
+                    <div className="space-y-4">
                       <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wide">
-                        Colors
+                        Transform Mode
                       </h3>
-                      <select
-                        value={activePalette}
-                        onChange={(e) => setActivePalette(e.target.value as ColorPalette)}
-                        className="text-xs bg-white/10 border border-white/10 rounded px-2 py-1 text-gray-300"
-                      >
-                        {Object.keys(COLOR_PALETTES).map((palette) => (
-                          <option key={palette} value={palette}>
-                            {palette.charAt(0).toUpperCase() + palette.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      {COLOR_PALETTES[activePalette].map((color) => (
+                      <div className="flex gap-2">
                         <button
-                          key={color}
-                          onClick={() => onColorChange(color)}
-                          className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                            selectedColor === color
-                              ? 'border-white scale-110 ring-2 ring-white/50'
-                              : 'border-transparent'
+                          onClick={() => onTransformModeChange?.('translate')}
+                          className={`flex-1 px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                            transformMode === 'translate'
+                              ? 'bg-blue-600/30 ring-2 ring-blue-400 text-blue-300'
+                              : 'bg-white/5 hover:bg-white/10 text-gray-300'
                           }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                      <div className="w-px h-6 bg-white/20" />
-                      <label className="relative w-8 h-8 cursor-pointer rounded-full overflow-hidden border-2 border-white/30 flex items-center justify-center hover:border-white transition-colors">
-                        <Palette size={14} />
-                        <input
-                          type="color"
-                          value={selectedColor}
-                          onChange={(e) => onColorChange(e.target.value)}
-                          className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer"
-                        />
-                      </label>
+                        >
+                          <Move size={18} />
+                          Move
+                        </button>
+                        <button
+                          onClick={() => onTransformModeChange?.('rotate')}
+                          className={`flex-1 px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                            transformMode === 'rotate'
+                              ? 'bg-blue-600/30 ring-2 ring-blue-400 text-blue-300'
+                              : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                          }`}
+                        >
+                          <RotateCw size={18} />
+                          Rotate
+                        </button>
+                      </div>
+
+                      {selectedOrnamentId && (
+                        <button
+                          onClick={onDeleteSelectedOrnament}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 hover:text-red-300 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                          Delete Selected Ornament
+                        </button>
+                      )}
+
+                      {!selectedOrnamentId && (
+                        <div className="p-4 rounded-lg bg-white/5 text-center text-gray-400 text-sm">
+                          Click on an ornament to select it
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
+
+                  {/* Color Selection - hide in edit mode */}
+                  {mode !== 'edit' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wide">
+                          Colors
+                        </h3>
+                        <select
+                          value={activePalette}
+                          onChange={(e) => setActivePalette(e.target.value as ColorPalette)}
+                          className="text-xs bg-white/10 border border-white/10 rounded px-2 py-1 text-gray-300"
+                        >
+                          {Object.keys(COLOR_PALETTES).map((palette) => (
+                            <option key={palette} value={palette}>
+                              {palette.charAt(0).toUpperCase() + palette.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        {COLOR_PALETTES[activePalette].map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => onColorChange(color)}
+                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                              selectedColor === color
+                                ? 'border-white scale-110 ring-2 ring-white/50'
+                                : 'border-transparent'
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                        <div className="w-px h-6 bg-white/20" />
+                        <label className="relative w-8 h-8 cursor-pointer rounded-full overflow-hidden border-2 border-white/30 flex items-center justify-center hover:border-white transition-colors">
+                          <Palette size={14} />
+                          <input
+                            type="color"
+                            value={selectedColor}
+                            onChange={(e) => onColorChange(e.target.value)}
+                            className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right: Preview & Quota */}
