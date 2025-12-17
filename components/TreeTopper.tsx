@@ -107,7 +107,7 @@ const SnowflakeTopper: React.FC<{ color: string; glow: boolean }> = ({ color, gl
   useFrame((state) => {
     if (groupRef.current) {
       const time = state.clock.getElapsedTime();
-      groupRef.current.rotation.z = time * 0.3;
+      groupRef.current.rotation.y = time * 0.3;
     }
   });
 
